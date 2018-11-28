@@ -53,6 +53,12 @@ private:
 /// \param fps, in/out - fps_counter which is used for tracking processed frames
 /// \param color, in - the color of text
 void put_fps_text(cv::Mat& image, fps_counter& fps, cv::Scalar color = { 255, 0, 0 });
+
+/// \brief Adds FPS text on passed image by updating passed fps_counter
+/// \param image, in/out - image where FPS will be printed
+/// \param fps, in/out - fps_counter which is used for tracking processed frames
+/// \param color, in - the color of text
+void put_corner_counter_text(cv::Mat& image, int corner_counter, cv::Scalar color = { 255, 0, 0 });
 } // utils
 
 #endif // __UTILS_HPP__

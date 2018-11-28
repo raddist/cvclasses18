@@ -74,4 +74,24 @@ void put_fps_text(cv::Mat& image, fps_counter& fps, cv::Scalar color /*= (255, 0
 
    cv::putText(image, ss.str(), textOrgPoint, txtFont, fontScale, color, thickness, 8, false);
 }
+
+void put_corner_counter_text(cv::Mat& image, int corner_counter, cv::Scalar color = { 255, 0, 0 })
+{
+   const auto txtFont = CV_FONT_HERSHEY_SIMPLEX;
+   const auto fontScale = 0.5;
+   const auto thickness = 1;
+   static const cv::Size textSize = cv::getTextSize(
+      "fps: 19.127", txtFont, fontScale, thickness, nullptr);
+   static const cv::Point textOrgPoint = {
+      image.size().width / 2 - textSize.width / 2,
+      image.size().height - 25
+   };
+
+   std::stringstream ss;
+   ss.precision(5);
+
+   ss << "corners: " << std::fixed << corner_counter;
+
+   cv::putText(image, ss.str(), textOrgPoint, txtFont, fontScale, color, thickness, 8, false);
+}
 } // utils

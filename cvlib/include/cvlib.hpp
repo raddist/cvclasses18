@@ -7,7 +7,19 @@
 #ifndef __CVLIB_HPP__
 #define __CVLIB_HPP__
 
+#include <array>
+#include <vector>
 #include <opencv2/opencv.hpp>
+
+namespace
+{
+   enum brightness_check_result
+   {
+      darker = 0,
+      similar = 1,
+      brighter = 2,
+   };
+}; //namespace
 
 namespace cvlib
 {
@@ -68,6 +80,21 @@ public:
    /// \see Feature2d::detect
    virtual void detect(cv::InputArray image, CV_OUT std::vector<cv::KeyPoint>& keypoints,
       cv::InputArray mask = cv::noArray()) override;
+
+   void set_threshold(int thresh);
+private:
+   brightness_check_result check_brightness(unsigned int circle_point_num, cv::Point center);
+
+   bool is_keypoint(cv::Point center, unsigned int step, unsigned int num);
+
+   const cv::Point circle_template_[16] = { cv::Point(0, -3), cv::Point(1, -3),  cv::Point(2, -2),  cv::Point(3, -1),
+      cv::Point(3, 0),  cv::Point(3, 1),   cv::Point(2, 2),   cv::Point(1, 3),
+      cv::Point(0, 3),  cv::Point(-1, 3),  cv::Point(-2, 2),  cv::Point(-3, 1),
+      cv::Point(-3, 0), cv::Point(-3, -1), cv::Point(-2, -2), cv::Point(-1, -3) };
+
+   int threshold_;
+
+   cv::Mat image_;
 };
 } // namespace cvlib
 
