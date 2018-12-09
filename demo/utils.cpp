@@ -75,7 +75,7 @@ void put_fps_text(cv::Mat& image, fps_counter& fps, cv::Scalar color /*= (255, 0
    cv::putText(image, ss.str(), textOrgPoint, txtFont, fontScale, color, thickness, 8, false);
 }
 
-void put_corner_counter_text(cv::Mat& image, int corner_counter, cv::Scalar color = { 255, 0, 0 })
+void put_corner_counter_text(cv::Mat& image, int corner_counter, cv::Scalar color)
 {
    const auto txtFont = CV_FONT_HERSHEY_SIMPLEX;
    const auto fontScale = 0.5;

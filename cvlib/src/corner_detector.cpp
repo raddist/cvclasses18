@@ -55,8 +55,25 @@ brightness_check_result corner_detector_fast::check_brightness(unsigned int circ
 bool corner_detector_fast::is_keypoint(cv::Point center, unsigned int step, unsigned int num)
 {
    std::vector<unsigned int> check_results(3, 0);
-   for (int i = 0; i < 16; i += step)
-      check_results[check_brightness(i, center)]++;
+
+   unsigned int prev_check_res = check_brightness(0, center);
+   check_results[prev_check_res]++;
+   for (int i = 1; i < 16*2; i += step)
+   {
+       unsigned int cur_check_res = check_brightness(i%16, center);
+       check_results[cur_check_res]++;
+       if (cur_check_res == prev_check_res)
+       {
+           if (check_results[cur_check_res] >= num)
+               break;
+       }
+       else
+       {
+           check_results[prev_check_res] = 0;
+           if (i >= 16)
+               break;
+       }
+   }
 
    return ((check_results[brightness_check_result::brighter] >= num)
         || (check_results[brightness_check_result::darker]   >= num));
