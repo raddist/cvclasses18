@@ -82,6 +82,20 @@ public:
       cv::InputArray mask = cv::noArray()) override;
 
    void set_threshold(int thresh);
+
+   /// \see Feature2d::compute
+   virtual void compute(cv::InputArray image, std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors) override;
+
+   /// \see Feature2d::detectAndCompute
+   virtual void detectAndCompute(cv::InputArray image, cv::InputArray mask, std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors,
+       bool useProvidedKeypoints = false) override;
+
+   /// \see Feature2d::getDefaultName
+   virtual cv::String getDefaultName() const override
+   {
+       return "FAST_Binary";
+   }
+
 private:
    brightness_check_result check_brightness(unsigned int circle_point_num, cv::Point center);
 
@@ -95,6 +109,58 @@ private:
    int threshold_;
 
    cv::Mat image_;
+};
+
+
+/// \brief Descriptor matched based on ratio of SSD
+class descriptor_matcher : public cv::DescriptorMatcher
+{
+    public:
+    /// \brief ctor
+    descriptor_matcher(float ratio = 1.5) : ratio_(ratio)
+    {
+    }
+
+    /// \brief setup ratio threshold for SSD filtering
+    void set_ratio(float r)
+    {
+        ratio_ = r;
+    }
+
+    protected:
+    /// \see cv::DescriptorMatcher::knnMatchImpl
+    virtual void knnMatchImpl(cv::InputArray queryDescriptors, std::vector<std::vector<cv::DMatch>>& matches, int k,
+                              cv::InputArrayOfArrays masks = cv::noArray(), bool compactResult = false) override;
+
+    /// \see cv::DescriptorMatcher::radiusMatchImpl
+    virtual void radiusMatchImpl(cv::InputArray queryDescriptors, std::vector<std::vector<cv::DMatch>>& matches, float maxDistance,
+                                 cv::InputArrayOfArrays masks = cv::noArray(), bool compactResult = false) override;
+
+    /// \see cv::DescriptorMatcher::isMaskSupported
+    virtual bool isMaskSupported() const override
+    {
+        return false;
+    }
+
+    /// \see cv::DescriptorMatcher::isMaskSupported
+    virtual cv::Ptr<cv::DescriptorMatcher> clone(bool emptyTrainData = false) const override
+    {
+        cv::Ptr<cv::DescriptorMatcher> copy = new descriptor_matcher(*this);
+        if (emptyTrainData)
+        {
+            copy->clear();
+        }
+        return copy;
+    }
+
+    private:
+    float ratio_;
+};
+
+/// \brief Stitcher for merging images into big one
+class Stitcher
+{
+    /// \todo design and implement
 };
 } // namespace cvlib
 

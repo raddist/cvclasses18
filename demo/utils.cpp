@@ -49,30 +49,26 @@ fps_counter::fps_counter(int length /*= 30*/) :
 
 double fps_counter::process_new_frame()
 {
-   const int64 new_tick_count = cv::getTickCount();
-   const double diff = cv::getTickFrequency() / (new_tick_count - last_tick_count_);
-   last_tick_count_ = new_tick_count;
-   return accum_.add_new_value(diff);
+    const int64 new_tick_count = cv::getTickCount();
+    const double diff = cv::getTickFrequency() / (new_tick_count - last_tick_count_);
+    last_tick_count_ = new_tick_count;
+    return accum_.add_new_value(diff);
 }
 
 void put_fps_text(cv::Mat& image, fps_counter& fps, cv::Scalar color /*= (255, 0, 0)*/)
 {
-   const auto txtFont = CV_FONT_HERSHEY_SIMPLEX;
-   const auto fontScale = 0.5;
-   const auto thickness = 1;
-   static const cv::Size textSize = cv::getTextSize(
-      "fps: 19.127", txtFont, fontScale, thickness, nullptr);
-   static const cv::Point textOrgPoint = {
-      image.size().width / 2 - textSize.width / 2,
-      image.size().height - 5
-   };
+    const auto txtFont = CV_FONT_HERSHEY_SIMPLEX;
+    const auto fontScale = 0.5;
+    const auto thickness = 1;
+    static const cv::Size textSize = cv::getTextSize("fps: 19.127", txtFont, fontScale, thickness, nullptr);
+    static const cv::Point textOrgPoint = {image.size().width / 2 - textSize.width / 2, image.size().height - 5};
 
-   std::stringstream ss;
-   ss.precision(5);
+    std::stringstream ss;
+    ss.precision(5);
 
-   ss << "fps: " << std::fixed << fps.process_new_frame();
+    ss << "fps: " << std::fixed << fps.process_new_frame();
 
-   cv::putText(image, ss.str(), textOrgPoint, txtFont, fontScale, color, thickness, 8, false);
+    cv::putText(image, ss.str(), textOrgPoint, txtFont, fontScale, color, thickness, 8, false);
 }
 
 void put_corner_counter_text(cv::Mat& image, int corner_counter, cv::Scalar color)
