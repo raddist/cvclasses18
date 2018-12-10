@@ -8,6 +8,12 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 
+def get_hamming(a, b):
+    d = 0;
+    for i in range(len(a[0])):
+        d+=bin(a[0][i] ^ b[0][i]).count("1")
+    return d
+
 def get_distances(values, cols):
   d = []
 
@@ -34,7 +40,7 @@ def compare_descriptors(filename):
   for key, val in hist_data.items():
     val = (val - np.min(val))/np.ptp(val)
     bins = np.linspace(min(val), max(val), 50)
-    plt.hist(val, alpha=0.5, label=key)
+    plt.hist(val, alpha=0.5, label=key, normed=True)
 
   plt.legend()
   plt.show()

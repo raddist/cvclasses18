@@ -79,8 +79,8 @@ void put_corner_counter_text(cv::Mat& image, int corner_counter, cv::Scalar colo
    static const cv::Size textSize = cv::getTextSize(
       "fps: 19.127", txtFont, fontScale, thickness, nullptr);
    static const cv::Point textOrgPoint = {
-      image.size().width / 2 - textSize.width / 2,
-      image.size().height - 25
+      10,
+      textSize.height + 10
    };
 
    std::stringstream ss;

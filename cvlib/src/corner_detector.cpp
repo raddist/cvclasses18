@@ -1,4 +1,4 @@
-/* FAST corner detector algorithm implementation.
+﻿/* FAST corner detector algorithm implementation.
  * @file
  * @date 2018-10-16
  * @author Anonymous
@@ -80,29 +80,97 @@ bool corner_detector_fast::is_keypoint(cv::Point center, unsigned int step, unsi
         || (check_results[brightness_check_result::darker]   >= num));
 }
 
-void corner_detector_fast::compute(cv::InputArray, std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors)
+void corner_detector_fast::compute(cv::InputArray image, std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors)
 {
-    std::srand(unsigned(std::time(0))); // \todo remove me
-    // \todo implement any binary descriptor
-    const int desc_length = 2;
+    const int desc_length = 3*3 + 4;
     descriptors.create(static_cast<int>(keypoints.size()), desc_length, CV_32S);
+
     auto desc_mat = descriptors.getMat();
     desc_mat.setTo(0);
 
+    cv::Mat image_mat = image.getMat();
+    if (image_mat.channels() == 3)
+        cv::cvtColor(image_mat, image_mat, cv::COLOR_BGR2GRAY);
+
     int* ptr = reinterpret_cast<int*>(desc_mat.ptr());
+
     for (const auto& pt : keypoints)
     {
-        for (int i = 0; i < desc_length; ++i)
+        int x = (int)pt.pt.x;
+        int y = (int)pt.pt.y;
+        cv::Point center{x, y};
+
+        double min = 1.0;
+        double max = 255.0;
+        std::vector<int> radiuses{1, 2, 3};
+        for (auto && radius : radiuses)
         {
-            *ptr = std::rand();
-            ++ptr;
+            cv::Mat region = image_mat(cv::Range(y - radius, y + radius + 1), cv::Range(x - radius, x + radius + 1));
+
+            cv::minMaxLoc(region, &min, &max);
+
+            cv::Mat mmean, mstd;
+            cv::meanStdDev(region, mmean, mstd);
+            float mean = (float)mmean.at<double>(0);
+            float std = (float)mstd.at<double>(0);
+
+            *ptr = int(mean / max * 1e4);
+            ptr++;
+            *ptr = int(std / max * 1e4);
+            ptr++;
+
+            cv::Moments mom = cv::moments(region);
+            double hu[7];
+            cv::HuMoments(mom, hu);
+            *ptr = int(hu[0] * 10000);
+            ptr++;
         }
+
+        // calculate direction with max brightness difference
+        int center_brightness = image_mat.at<unsigned char>(center);
+        int max_direction = 0;
+        int max_diff = 0;
+        for (int j = 0; j < 16; ++j)
+        {
+            uchar circle_point_brightness = image_mat.at<uchar>(center + circle_template_[j]);
+            int diff = std::abs(circle_point_brightness - center_brightness);
+            if (diff > max_diff)
+            {
+                max_diff = diff;
+                max_direction = j;
+            }
+        }
+
+        // store diff with forward direction
+        *ptr = int(max_diff / max * 1e4);
+        ptr++;
+
+        // store diff with wright direction
+        int wright_direction = (max_direction + 4) % 16;
+        uchar circle_write_brightness = image_mat.at<uchar>(center + circle_template_[wright_direction]);
+        *ptr = int(circle_write_brightness / max * 1e4);
+        ptr++;
+
+        // store diff with backward direction
+        int back_direction = (max_direction + 4) % 16;
+        uchar circle_back_brightness = image_mat.at<uchar>(center + circle_template_[back_direction]);
+        *ptr = int(circle_back_brightness / max * 1e4);
+        ptr++;
+
+        // store diff with left direction
+        int left_direction = (max_direction + 4) % 16;
+        uchar circle_left_brightness = image_mat.at<uchar>(center + circle_template_[left_direction]);
+        *ptr = int(circle_left_brightness / max * 1e4);
+        ptr++;
     }
 }
 
-void corner_detector_fast::detectAndCompute(cv::InputArray, cv::InputArray, std::vector<cv::KeyPoint>&, cv::OutputArray descriptors, bool /*= false*/)
+void corner_detector_fast::detectAndCompute(cv::InputArray, cv::InputArray frame,
+    std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors, bool /*= false*/)
 {
-    // \todo implement me
+    set_threshold(20);
+    detect(frame, keypoints);
+    compute(frame, keypoints, descriptors);
 }
 
 } // namespace cvlib
