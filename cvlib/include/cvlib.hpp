@@ -106,7 +106,7 @@ private:
       cv::Point(0, 3),  cv::Point(-1, 3),  cv::Point(-2, 2),  cv::Point(-3, 1),
       cv::Point(-3, 0), cv::Point(-3, -1), cv::Point(-2, -2), cv::Point(-1, -3) };
 
-   int threshold_;
+   int threshold_ = 20;
 
    cv::Mat image_;
 };

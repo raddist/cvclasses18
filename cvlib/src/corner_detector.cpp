@@ -165,12 +165,16 @@ void corner_detector_fast::compute(cv::InputArray image, std::vector<cv::KeyPoin
     }
 }
 
-void corner_detector_fast::detectAndCompute(cv::InputArray, cv::InputArray frame,
+void corner_detector_fast::detectAndCompute(cv::InputArray frame, cv::InputArray,
     std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors, bool /*= false*/)
 {
+    std::cout << keypoints.size() << " \n";
     set_threshold(20);
     detect(frame, keypoints);
+    std::cout << keypoints.size() << " \n";
     compute(frame, keypoints, descriptors);
+    std::cout << keypoints.size() <<  " \n";
+    std::cout << " \n\n";
 }
 
 } // namespace cvlib
