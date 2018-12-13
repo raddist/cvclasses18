@@ -37,7 +37,7 @@ int demo_motion_segmentation(int argc, char* argv[])
 
         mseg->setVarThreshold(threshold); // \todo use TackbarCallback
         mseg->apply(frame_gray, frame_mseg, alpha / 100.0);
-        if (!frame_mseg.empty() && mseg->isinitialized())
+        if (!frame_mseg.empty())
             cv::imshow(demo_wnd, frame_mseg);
     }
 

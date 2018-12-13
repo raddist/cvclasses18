@@ -63,7 +63,6 @@ class motion_segmentation : public cv::BackgroundSubtractor
 
     private:
     cv::Mat bg_model_;
-    cv::Mat variance_;
     double var_threshold_;
     unsigned int frames_for_init_;
     unsigned int current_frame_;
@@ -106,7 +105,9 @@ private:
       cv::Point(0, 3),  cv::Point(-1, 3),  cv::Point(-2, 2),  cv::Point(-3, 1),
       cv::Point(-3, 0), cv::Point(-3, -1), cv::Point(-2, -2), cv::Point(-1, -3) };
 
-   int threshold_ = 20;
+   int threshold_ = 30;
+
+	std::vector<std::pair<cv::Point, cv::Point>> matched_pairs_{};
 
    cv::Mat image_;
 };

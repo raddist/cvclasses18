@@ -8,6 +8,26 @@
 
 #include <ctime>
 
+namespace
+{
+const int kernel_size = 7;
+const int desc_pairs = 32 * 3;
+
+void initialize_matched_pairs(std::vector<std::pair<cv::Point, cv::Point>>& pairs)
+{
+    int min_coord = -3;
+    cv::RNG rnd;
+    for (int i = 0; i < desc_pairs; ++i)
+    {
+        cv::Point p1(rnd.uniform(min_coord, min_coord + kernel_size),
+                     rnd.uniform(min_coord, min_coord + kernel_size));
+        cv::Point p2(rnd.uniform(min_coord, min_coord + kernel_size),
+                     rnd.uniform(min_coord, min_coord + kernel_size));
+        pairs.emplace_back(p1, p2);
+    }
+}
+}
+
 namespace cvlib
 {
 // static
@@ -82,7 +102,13 @@ bool corner_detector_fast::is_keypoint(cv::Point center, unsigned int step, unsi
 
 void corner_detector_fast::compute(cv::InputArray image, std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors)
 {
-    const int desc_length = 3*3 + 4;
+
+    if (matched_pairs_.size() == 0)
+    {
+        initialize_matched_pairs(matched_pairs_);
+    }
+
+    const int desc_length = desc_pairs / sizeof(int);
     descriptors.create(static_cast<int>(keypoints.size()), desc_length, CV_32S);
 
     auto desc_mat = descriptors.getMat();
@@ -96,84 +122,41 @@ void corner_detector_fast::compute(cv::InputArray image, std::vector<cv::KeyPoin
 
     for (const auto& pt : keypoints)
     {
+        int descriptor = 0;
         int x = (int)pt.pt.x;
         int y = (int)pt.pt.y;
         cv::Point center{x, y};
 
-        double min = 1.0;
-        double max = 255.0;
-        std::vector<int> radiuses{1, 2, 3};
-        for (auto && radius : radiuses)
+        int counter = 0;
+        for (auto && p_pair : matched_pairs_)
         {
-            cv::Mat region = image_mat(cv::Range(y - radius, y + radius + 1), cv::Range(x - radius, x + radius + 1));
+            counter++;
 
-            cv::minMaxLoc(region, &min, &max);
+            uchar p1_brightness = image_mat.at<uchar>(center + p_pair.first);
+            uchar p2_brightness = image_mat.at<uchar>(center + p_pair.second);
 
-            cv::Mat mmean, mstd;
-            cv::meanStdDev(region, mmean, mstd);
-            float mean = (float)mmean.at<double>(0);
-            float std = (float)mstd.at<double>(0);
-
-            *ptr = int(mean / max * 1e4);
-            ptr++;
-            *ptr = int(std / max * 1e4);
-            ptr++;
-
-            cv::Moments mom = cv::moments(region);
-            double hu[7];
-            cv::HuMoments(mom, hu);
-            *ptr = int(hu[0] * 10000);
-            ptr++;
-        }
-
-        // calculate direction with max brightness difference
-        int center_brightness = image_mat.at<unsigned char>(center);
-        int max_direction = 0;
-        int max_diff = 0;
-        for (int j = 0; j < 16; ++j)
-        {
-            uchar circle_point_brightness = image_mat.at<uchar>(center + circle_template_[j]);
-            int diff = std::abs(circle_point_brightness - center_brightness);
-            if (diff > max_diff)
+            descriptor = descriptor << 1;
+            if (p1_brightness <= p2_brightness)
             {
-                max_diff = diff;
-                max_direction = j;
+                descriptor |= 1;
+            }
+
+            if (counter % sizeof(int) == 0)
+            {
+                *ptr = descriptor;
+                ptr++;
             }
         }
-
-        // store diff with forward direction
-        *ptr = int(max_diff / max * 1e4);
-        ptr++;
-
-        // store diff with wright direction
-        int wright_direction = (max_direction + 4) % 16;
-        uchar circle_write_brightness = image_mat.at<uchar>(center + circle_template_[wright_direction]);
-        *ptr = int(circle_write_brightness / max * 1e4);
-        ptr++;
-
-        // store diff with backward direction
-        int back_direction = (max_direction + 4) % 16;
-        uchar circle_back_brightness = image_mat.at<uchar>(center + circle_template_[back_direction]);
-        *ptr = int(circle_back_brightness / max * 1e4);
-        ptr++;
-
-        // store diff with left direction
-        int left_direction = (max_direction + 4) % 16;
-        uchar circle_left_brightness = image_mat.at<uchar>(center + circle_template_[left_direction]);
-        *ptr = int(circle_left_brightness / max * 1e4);
-        ptr++;
     }
 }
 
 void corner_detector_fast::detectAndCompute(cv::InputArray frame, cv::InputArray,
     std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors, bool /*= false*/)
 {
-    std::cout << keypoints.size() << " \n";
-    set_threshold(20);
+    set_threshold(30);
     detect(frame, keypoints);
-    std::cout << keypoints.size() << " \n";
     compute(frame, keypoints, descriptors);
-    std::cout << keypoints.size() <<  " \n";
+
     std::cout << " \n\n";
 }
 

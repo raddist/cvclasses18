@@ -48,7 +48,7 @@ int demo_feature_matching(int argc, char* argv[])
     int pressed_key = 0;
 
     int max_distance = 100;
-    cv::createTrackbar("SSD", demo_wnd, &max_distance, 500);
+    cv::createTrackbar("SSD", demo_wnd, &max_distance, 1500);
     while (pressed_key != 27) // ESC
     {
         cap >> test.img;

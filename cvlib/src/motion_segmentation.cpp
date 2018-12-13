@@ -38,10 +38,6 @@ void motion_segmentation::apply(cv::InputArray _image, cv::OutputArray _fgmask, 
     if (current_frame_ == 0)
     {
         bg_model_ = cv::Mat::zeros(image.size(), CV_32F);
-        cv::Scalar scalar_mean = cv::mean(image);
-        cv::Scalar square_scalar_mean = cv::mean(image.mul(image));
-        float var = square_scalar_mean.val[0] - scalar_mean.val[0] * scalar_mean.val[0];
-        variance_ = cv::Mat(image.size(), CV_32F, cv::Scalar(var));
     }
 
     ++current_frame_;
@@ -50,17 +46,7 @@ void motion_segmentation::apply(cv::InputArray _image, cv::OutputArray _fgmask, 
     cv::absdiff(image, bg_model_, diff);
     cv::accumulateWeighted(image, bg_model_, leaning_rate);
 
-    if (current_frame_ == frames_for_init_)
-    {
-        is_initialized_ = true;
-    }
-
-    cv::Mat square_diff = diff.mul(diff);
-    cv::Mat stddev;
-    cv::sqrt(variance_, stddev);
-
-    cv::Mat result = ((diff / stddev) > var_threshold_) * 255;
-    cv::accumulateWeighted(square_diff, variance_, leaning_rate);
+    cv::Mat result = (diff > var_threshold_) * 255;
     _fgmask.assign(result);
 }
 } // namespace cvlib
