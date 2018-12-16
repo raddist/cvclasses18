@@ -9,6 +9,10 @@
 
 #include "utils.hpp"
 
+#include <chrono>
+#include <thread>
+
+
 int demo_feature_matching(int argc, char* argv[])
 {
     cv::VideoCapture cap(0);
@@ -25,10 +29,10 @@ int demo_feature_matching(int argc, char* argv[])
     auto matcher = cvlib::descriptor_matcher(1.2f);
 
     //\todo add trackbar to demo_wnd to tune ratio value
-    int ratio = 10;
-    matcher.set_ratio(ratio);
-    cv::createTrackbar("ratio", demo_wnd, &ratio, 50,
-        [](int value, void* ptr) { ((cvlib::descriptor_matcher*)(ptr))->set_ratio(float(1 - value / 100)); }, (void*)&matcher);
+    int ratio = 1000;
+    matcher.set_ratio(0.001);
+    cv::createTrackbar("ratio, 1/1000", demo_wnd, &ratio, 1000,
+        [](int value, void* ptr) { ((cvlib::descriptor_matcher*)(ptr))->set_ratio(float(value / 1000.0)); }, (void*)&matcher);
 
     /// \brief helper struct for tidy code
     struct img_features
@@ -47,8 +51,8 @@ int demo_feature_matching(int argc, char* argv[])
     utils::fps_counter fps;
     int pressed_key = 0;
 
-    int max_distance = 100;
-    cv::createTrackbar("SSD", demo_wnd, &max_distance, 1500);
+    int max_distance = 10;
+    cv::createTrackbar("SSD", demo_wnd, &max_distance, 1000);
     while (pressed_key != 27) // ESC
     {
         cap >> test.img;
@@ -62,6 +66,10 @@ int demo_feature_matching(int argc, char* argv[])
         {
             ref.img = test.img.clone();
             detector->detectAndCompute(ref.img, cv::Mat(), ref.corners, ref.descriptors);
+        }
+        if (pressed_key == 'q') // space
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10000));
         }
 
         if (ref.corners.empty())

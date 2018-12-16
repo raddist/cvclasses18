@@ -11,7 +11,7 @@
 namespace
 {
 const int kernel_size = 7;
-const int desc_pairs = 32 * 3;
+const int desc_pairs = 8 * 32;
 
 void initialize_matched_pairs(std::vector<std::pair<cv::Point, cv::Point>>& pairs)
 {
@@ -108,8 +108,8 @@ void corner_detector_fast::compute(cv::InputArray image, std::vector<cv::KeyPoin
         initialize_matched_pairs(matched_pairs_);
     }
 
-    const int desc_length = desc_pairs / sizeof(int);
-    descriptors.create(static_cast<int>(keypoints.size()), desc_length, CV_32S);
+    const int desc_length = 32;
+    descriptors.create(static_cast<int>(keypoints.size()), desc_length, CV_8U);
 
     auto desc_mat = descriptors.getMat();
     desc_mat.setTo(0);
@@ -118,7 +118,7 @@ void corner_detector_fast::compute(cv::InputArray image, std::vector<cv::KeyPoin
     if (image_mat.channels() == 3)
         cv::cvtColor(image_mat, image_mat, cv::COLOR_BGR2GRAY);
 
-    int* ptr = reinterpret_cast<int*>(desc_mat.ptr());
+    uint8_t* ptr = reinterpret_cast<uint8_t*>(desc_mat.ptr());
 
     for (const auto& pt : keypoints)
     {
@@ -141,7 +141,7 @@ void corner_detector_fast::compute(cv::InputArray image, std::vector<cv::KeyPoin
                 descriptor |= 1;
             }
 
-            if (counter % sizeof(int) == 0)
+            if (counter % (sizeof(uint8_t) * 8) == 0)
             {
                 *ptr = descriptor;
                 ptr++;
