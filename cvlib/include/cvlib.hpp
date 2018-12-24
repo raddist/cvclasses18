@@ -161,7 +161,21 @@ class descriptor_matcher : public cv::DescriptorMatcher
 /// \brief Stitcher for merging images into big one
 class Stitcher
 {
-    /// \todo design and implement
+public:
+    void makeStitchedImg(const cv::Mat& testImg, const std::vector<cv::KeyPoint>& testCorners, const cv::Mat& refImg,
+        const std::vector<cv::KeyPoint>& refCorners, const std::vector<std::vector<cv::DMatch>>& pairs, cv::Mat& stitchedImg);
+    void stitch(std::vector<cv::KeyPoint> testCorners, std::vector<cv::KeyPoint>& refCorners, const cv::Mat& testDescriptors, cv::Mat& refDescriptors,
+        const std::vector<std::vector<cv::DMatch>>& pairs, cv::Mat& refImg);
+
+private:
+    void calcHomography(const std::vector<cv::KeyPoint>& testCorners, const std::vector<cv::KeyPoint>& refCorners,
+        const std::vector<std::vector<cv::DMatch>>& pairs);
+    void warpPerspective(std::vector<cv::KeyPoint>& srcDdst);
+
+    cv::Mat m_homography;
+    int m_dx, m_dy;
+    bool m_isStitched;
+    cv::Mat m_stitchedImg;
 };
 } // namespace cvlib
 
